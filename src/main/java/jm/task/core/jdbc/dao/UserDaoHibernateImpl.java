@@ -12,9 +12,9 @@ import java.util.List;
 import static jm.task.core.jdbc.util.Util.getSessionFactory;
 
 public class UserDaoHibernateImpl implements UserDao {
-    private static final String createUsersTableDdl = "CREATE TABLE IF NOT EXISTS User (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(64), lastName VARCHAR(64), age TINYINT)";
-    private static final String dropUsersTableDdl = "DROP TABLE IF EXISTS User";
-    private static final String cleanUsersTableDml = "DELETE FROM User";
+    private final String CREATE_USERS_TABLE_DDL = "CREATE TABLE IF NOT EXISTS User (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(64), lastName VARCHAR(64), age TINYINT)";
+    private final String DROP_USERS_TABLE_DDL = "DROP TABLE IF EXISTS User";
+    private final String CLEAN_USERS_TABLE_DML = "DELETE FROM User";
     private SessionFactory sessionFactory = Util.getSessionFactory();
     public UserDaoHibernateImpl() {
 
@@ -28,8 +28,7 @@ public class UserDaoHibernateImpl implements UserDao {
     public void createUsersTable() {
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-            String sql = createUsersTableDdl;
-            Query query = session.createSQLQuery(sql).addEntity(User.class);
+            Query query = session.createSQLQuery(CREATE_USERS_TABLE_DDL).addEntity(User.class);
             query.executeUpdate();
             transaction.commit();
         }
@@ -39,8 +38,7 @@ public class UserDaoHibernateImpl implements UserDao {
     public void dropUsersTable() {
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-            String sql = dropUsersTableDdl;
-            Query query = session.createSQLQuery(sql).addEntity(User.class);
+            Query query = session.createSQLQuery(DROP_USERS_TABLE_DDL).addEntity(User.class);
             query.executeUpdate();
             transaction.commit();
         }
@@ -84,17 +82,21 @@ public class UserDaoHibernateImpl implements UserDao {
         try (Session session = sessionFactory.openSession()) {
             list = session.createQuery("from User").list();
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
         }
+
         return list;
+
     }
 
     @Override
     public void cleanUsersTable() {
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-            String sql = cleanUsersTableDml;
-            Query query = session.createQuery(sql);
+            Query query = session.createQuery(CLEAN_USERS_TABLE_DML);
             query.executeUpdate();
             transaction.commit();
         } catch (Exception e) {
